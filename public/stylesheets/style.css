@@ -1,0 +1,12 @@
+body {
+	min-height: 2000px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+
+#body{
+	margin: 0 100px;
+}
