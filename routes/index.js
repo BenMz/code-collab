@@ -10,12 +10,6 @@ router.get('/about', function(req, res, next) {
   res.render('about', { title: "About Let's Collab!" });
 });
 
-router.get('/login', function(req, res, next) {
-  res.render('login', { title: "Login" });
-});
 
-router.get('/register', function(req, res, next) {
-  res.render('register', { title: "Register new account" });
-});
 
 module.exports = router;

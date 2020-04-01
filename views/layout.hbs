@@ -27,10 +27,25 @@
           </button>
         </div>
         <div id="navbar" class="collapse navbar-collapse">
-          <ul class="nav navbar-nav ml-xl-5">
+          <ul class="nav navbar-nav ml-xl-5 mr-auto">
             <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
             <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
-            <!-- <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li> -->
+          </ul>
+          <ul class="nav navbar-nav ml-xl-5">
+            {{#if user}}
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                {{user.name}}<span class="caret"></span>
+              </a>
+              <ul class="dropdown-menu">
+                <li><a href="/logout">Logout</a></li>
+              </ul>
+            </li>
+            
+            {{else}}
+            <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
+            <li class="nav-item"><a class="nav-link" href="/register">Register</a></li>
+            {{/if}}
           </ul>
         </div><!--/.nav-collapse -->
     </nav>
