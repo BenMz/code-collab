@@ -22,7 +22,7 @@ router.get('/session/:id', function(req, res){
 				res.render('error');
 			}
 			if(data){
-				res.render('session', {data: data});
+				res.render('session', {content: data.content, sessionId: data.id});
 			} else {
 				res.render('error');
 			}

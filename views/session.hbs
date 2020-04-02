@@ -1,1 +1,88 @@
+<div>
 <h1>Welcome to a new code session.</h1>
+	<div class="row">
+		<div class="col-md-8">
+			<textarea id="code">{{content}}</textarea>
+		</div>
+		<div class="col-md-4" id="chat">
+			<div class="panel panel-primary">
+				<div class="panel panel-heading">
+					CHAT
+					<span class="pull-right" id="chatbox-username">
+						{{#if user}}
+							{{user.name}}
+						{{/if}}
+					</span>
+				</div>
+				<div class="panel panel-body">
+					<ul class="media-list" style="height: 300px; overflow-y: scroll;" id="chatbox-list">
+
+					</ul>
+				</div>
+				<div class="panel panel-footer">
+					<div class="input-group">
+						<input type="text" class="form-control" placeholder="Enter message" id="newMessage"/>
+						<span class="input-group-btn">
+							<button type="button" class="btn btn-success" onclick="sendMessage()">Send</button>
+						</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<input type="hidden" value="{{sessionId}}" id="sessionId"/>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ot.js/0.0.15/ot-min.js"></script>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+	var EditorClient = ot.EditorClient;
+	var SocketIOAdapter = ot.SocketIOAdapter;
+	var CodeMirrorAdapter = ot.CodeMirrorAdapter;
+	var socket = io.connect('http://localhost:3000');
+
+	var username = $('#chatbox-username').val();
+	if(username === ""){
+		var userId = Math.floor(Math.random() * 9999).toString();
+		username = "User"+userId;
+		$('#chatbox-username').text(username);
+	};
+
+	var sessionId = $('#sessionId').val();
+	socket.emit('joinChannel', {channel:sessionId, username: username});
+
+	var userMessage = function(name, text){
+		return '<li class="media"><div class="media-body"><div class="media"><div class="media-body"><b>'+name+'</b>:'+text+'<hr/></div></div></div></li>';
+	};
+
+	var sendMessage = function(){
+		var userMessage = $('#newMessage').val();
+		socket.emit('chatMessage',{message: userMessage, username: username});
+		$('#newMessage').val("");
+	};
+
+	socket.on('chatMessage', function(data){
+		$('#chatbox-list').append(userMessage(data.username, data.message));
+	});
+
+	var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+		lineNumbers: true,
+		theme: "base16-dark"
+	});
+
+	var code = $('#code').val();
+	var cmClient;
+	function init(str, revision, clients, serverAdapter){
+		if(!code){
+			editor.setValue(str);
+		}
+		cmClient = window.cmClient = new EditorClient(revision, clients, serverAdapter, new CodeMirrorAdapter(editor));
+	}
+	socket.on('doc', function(obj){
+		init(obj.str, obj.revision, obj.clients, new SocketIOAdapter(socket));
+	});
+</script>
