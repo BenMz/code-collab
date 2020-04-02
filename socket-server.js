@@ -30,6 +30,9 @@ module.exports = function(server){
 		socket.on('chatMessage', function(data){
 			io.to(socket.channel).emit('chatMessage', data);
 		});
+		socket.on('endStream', function(data){
+			io.to(socket.channel).emit('endStream', data);
+		});
 		socket.on('disconnect', function(data){
 			socket.leave(socket.channel);
 		});

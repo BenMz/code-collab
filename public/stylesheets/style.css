@@ -10,3 +10,35 @@ a {
 #body{
 	margin: 0 100px;
 }
+
+*, *:before, *after {
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+#self-video {
+	margin-top : 15px;
+	width: 280px;
+	height: auto;
+	background-color: #EEE;
+}
+
+#peer-video {
+	width: 100%;
+	height: 75%;
+	max-height: 480px;
+	background-color: #EEE;
+}
+
+#video-container {
+	text-align: center;
+}
+
+#video-error, #step2, #step3 {
+	display: none;
+}
+
+#my-id {
+	font-weight: bold;
+}

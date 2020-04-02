@@ -5,8 +5,26 @@
 			<textarea id="code">{{content}}</textarea>
 		</div>
 		<div class="col-md-4" id="chat">
-			<div class="panel panel-primary">
-				<div class="panel panel-heading">
+			<div class="card card-primary">
+				<div id="video-container">
+					<video autoplay id="peer-video"></video>
+					<video autoplay id="self-video" muted="true"></video>
+					<div id="step2">
+						<p> ID: <span id="my-id">...</span></p>
+						<div class="form-inline">
+							<input type="text" class="form-control" placeholder="Call User ID" id="callto-id">
+							<a href="#" class="btn btn-sm btn-success" id="make-call">Call</a>
+						</div>
+					</div>
+					<div id="step3">
+						<p> 
+							Talk to <span id="peer-id">...</span>
+							<a href="#" class="btn btn-sm btn-danger" id="end-call">End call</a>
+						</p>
+
+					</div>
+				</div>
+				<div class="card card-header">
 					CHAT
 					<span class="pull-right" id="chatbox-username">
 						{{#if user}}
@@ -14,12 +32,12 @@
 						{{/if}}
 					</span>
 				</div>
-				<div class="panel panel-body">
+				<div class="card card-body">
 					<ul class="media-list" style="height: 300px; overflow-y: scroll;" id="chatbox-list">
 
 					</ul>
 				</div>
-				<div class="panel panel-footer">
+				<div class="card card-footer">
 					<div class="input-group">
 						<input type="text" class="form-control" placeholder="Enter message" id="newMessage"/>
 						<span class="input-group-btn">
@@ -37,6 +55,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/mode/javascript/javascript.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ot.js/0.0.15/ot-min.js"></script>
+<script src="https://unpkg.com/peerjs@1.0.0/dist/peerjs.min.js"></script>
+
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
@@ -68,6 +88,9 @@
 	socket.on('chatMessage', function(data){
 		$('#chatbox-list').append(userMessage(data.username, data.message));
 	});
+	socket.on('endStream', function(data){
+		endStream();
+	});
 
 	var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
 		lineNumbers: true,
@@ -85,4 +108,85 @@
 	socket.on('doc', function(obj){
 		init(obj.str, obj.revision, obj.clients, new SocketIOAdapter(socket));
 	});
+
+  // PeerJS
+    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+    // PeerJS object
+    var peer = new Peer(username + sessionId);
+
+    peer.on('open', function(){
+      $('#my-id').text(peer.id);
+    });
+
+    peer.on('close', function(){
+      step2();
+    });
+
+    // Receiving a call
+    peer.on('call', function(call){
+      // Answer the call automatically (instead of prompting user) for demo purposes
+      call.answer(window.localStream);
+      step3(call);
+    });
+
+    peer.on('error', function(err){
+      alert(err.message);
+      // Return to step 2 if error occurs
+      step2();
+    });
+
+    // Click handlers setup
+    $(function(){
+      $('#make-call').click(function(){
+        // Initiate a call!
+        var call = peer.call($('#callto-id').val(), window.localStream);
+        step3(call);
+      });
+      $('#end-call').click(function(){
+      	socket.emit('endStream',{username: username});
+        endStream();
+      });
+      step1();
+    });
+    function step1 () {
+      // Get audio/video stream
+      navigator.getUserMedia({audio: true, video: true}, function(stream){
+        // Set your video displays
+        document.getElementById('self-video').srcObject = stream;
+        window.localStream = stream;
+        step2();
+      }, function(){ $('#step1-error').show(); });
+    }
+
+    function step2() {
+      $('#step3').hide();
+      $('#step2').show();
+    }
+
+    function step3 (call) {
+      // Hang up on an existing call if present
+      if (window.existingCall) {
+        window.existingCall.close();
+      }
+      // Wait for stream on the call, then set peer video display
+      call.on('stream', function(stream){
+        document.getElementById('peer-video').srcObject = stream;
+      });
+      call.on('close', function(){
+      	console.log("puta");
+        step2();
+      });
+      // UI stuff
+      window.existingCall = call;
+      $('#peer-id').text(call.peer);
+      $('#step2').hide();
+      $('#step3').show();
+    }
+
+    function endStream(){
+      if (window.existingCall) {
+        window.existingCall.close();
+      }
+      step2();
+    }
 </script>
